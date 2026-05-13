@@ -7,12 +7,12 @@ export default function Home() {
       <section className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-12">
         <WalktogetherLogo />
         <div className="mt-12 max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-teal-700">Parent practice made small</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-teal-700">ABA parent training, simplified</p>
           <h1 className="mt-4 text-5xl font-semibold tracking-tight text-slate-950 md:text-7xl">
-            Walk with families, one simple practice plan at a time.
+            Build a parent video plan in seconds. Review, approve, send.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700">
-            Walktogether helps Kelly create short, personal weekly video assignments that parents can actually finish.
+            Describe what a family is working on. Walktogether picks the right videos, writes the weekly guidance, and sends it directly to the parent.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/dashboard" className="min-h-11 rounded-md bg-teal-700 px-5 py-3 font-semibold text-white hover:bg-teal-800">

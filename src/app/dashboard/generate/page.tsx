@@ -40,7 +40,7 @@ export default function GeneratePage() {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,680px)_1fr]">
       <section className="rounded-lg border border-slate-200 bg-white p-6">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Create a parent training plan</h1>
-        <p className="mt-2 text-slate-600">Describe what is hard, where it happens, and what parent support would help. No names or dates needed.</p>
+        <p className="mt-2 text-slate-600">Describe the behavior, where it happens, and how the parent can help. Focus on what and where — not who.</p>
         <textarea
           value={prompt}
           onChange={(event) => setPrompt(event.target.value.slice(0, 500))}
@@ -48,7 +48,7 @@ export default function GeneratePage() {
           placeholder="e.g. Child grabs toys instead of asking. Parent struggles with mealtime routines. Looking for beginner strategies."
         />
         <div className="mt-2 flex items-center justify-between text-sm text-slate-500">
-          <span>No names, dates, or diagnosis details.</span>
+          <span>Skip names, dates, and diagnosis labels.</span>
           <span>{prompt.length} / 500</span>
         </div>
         {error && <div className="mt-4 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</div>}
@@ -77,7 +77,7 @@ export default function GeneratePage() {
           </div>
         ) : (
           <div className="mt-4 space-y-3">
-            <p className="text-sm leading-6 text-slate-600">Generated plans will appear here after the deterministic matcher and rationale writer finish.</p>
+            <p className="text-sm leading-6 text-slate-600">Your plan will appear here. This usually takes a few seconds.</p>
             <Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
               View recent plans
             </Link>

@@ -33,7 +33,12 @@ export default async function DashboardPage() {
           </div>
           <div className="divide-y divide-slate-100">
             {plans.length === 0 ? (
-              <div className="px-5 py-10 text-slate-600">No plans yet. Generate the first Walktogether practice plan.</div>
+              <div className="flex flex-col items-start gap-4 px-5 py-10">
+                <p className="text-slate-600">No plans yet. Describe a family&apos;s goals and get a ready-to-send video plan.</p>
+                <Link href="/dashboard/generate" className="min-h-11 rounded-md bg-teal-700 px-4 py-3 font-semibold text-white hover:bg-teal-800">
+                  Generate your first plan
+                </Link>
+              </div>
             ) : (
               plans.map((plan) => (
                 <Link key={plan.id} href={`/dashboard/plan/${plan.id}`} className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-slate-50">
