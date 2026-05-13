@@ -7,7 +7,11 @@ import { PlanEditor } from "./plan-editor";
 
 export default async function PlanPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const plan = await getPlan(id);
-  if (!plan) notFound();
-  return <PlanEditor initialPlan={plan} videos={videos} contacts={await listContacts()} />;
+  try {
+    const [plan, contacts] = await Promise.all([getPlan(id), listContacts()]);
+    if (!plan) notFound();
+    return <PlanEditor initialPlan={plan} videos={videos} contacts={contacts} />;
+  } catch {
+    notFound();
+  }
 }

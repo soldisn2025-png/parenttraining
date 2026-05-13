@@ -11,7 +11,12 @@ function relativeTime(value: string) {
 }
 
 export default async function ProgressPage() {
-  const rows = await listProgressRows();
+  let rows: Awaited<ReturnType<typeof listProgressRows>> = [];
+  try {
+    rows = await listProgressRows();
+  } catch {
+    // DB unavailable — render empty table
+  }
 
   return (
     <div>

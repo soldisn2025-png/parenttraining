@@ -5,8 +5,14 @@ import { listPlans, listProgressRows } from "@/server/store";
 import { StatusBadge } from "@/components/status-badge";
 
 export default async function DashboardPage() {
-  const plans = (await listPlans()).slice(0, 5);
-  const progressRows = await listProgressRows();
+  let plans: Awaited<ReturnType<typeof listPlans>> = [];
+  let progressRows: Awaited<ReturnType<typeof listProgressRows>> = [];
+  try {
+    [plans, progressRows] = await Promise.all([listPlans(), listProgressRows()]);
+  } catch {
+    // DB unavailable — render empty dashboard rather than crash
+  }
+  plans = plans.slice(0, 5);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
