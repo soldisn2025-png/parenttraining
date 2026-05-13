@@ -122,7 +122,12 @@ export function PlanEditor({ initialPlan, videos, contacts }: { initialPlan: Gen
                 ))}
               </select>
             ) : (
-              <p className="text-sm text-slate-600">Add a contact before sending.</p>
+              <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-950">
+                <p className="font-semibold">Add a contact before sending.</p>
+                <a href="/dashboard/contacts" className="mt-2 inline-flex min-h-11 items-center rounded-md border border-amber-300 bg-white px-3 py-2 font-semibold">
+                  Go to contacts
+                </a>
+              </div>
             )}
             {plan.reviewStatus === "approved" ? (
               <button onClick={send} disabled={!contactId} className="min-h-11 w-full rounded-md bg-teal-700 px-4 py-3 font-semibold text-white disabled:bg-slate-300">

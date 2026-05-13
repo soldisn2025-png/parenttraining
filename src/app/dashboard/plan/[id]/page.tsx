@@ -2,12 +2,13 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { videos } from "@/data/catalog";
+import { withTimeout } from "@/lib/async";
 import { listContacts, getPlan } from "@/server/store";
 import { PlanEditor } from "./plan-editor";
 
 export default async function PlanPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const plan = await getPlan(id).catch((error) => {
+  const plan = await withTimeout(getPlan(id), 8000, "Plan lookup").catch((error) => {
     console.error("plan_detail_load_failed", {
       planId: id,
       message: error instanceof Error ? error.message : String(error),
@@ -16,7 +17,7 @@ export default async function PlanPage({ params }: { params: Promise<{ id: strin
   });
   if (!plan) notFound();
 
-  const contacts = await listContacts().catch((error) => {
+  const contacts = await withTimeout(listContacts(), 4000, "Contacts lookup").catch((error) => {
     console.error("plan_contacts_load_failed", {
       planId: id,
       message: error instanceof Error ? error.message : String(error),

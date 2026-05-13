@@ -27,6 +27,7 @@ export default function GeneratePage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Could not generate plan");
       setPlan(data.plan);
+      localStorage.setItem("walktogether:lastPlanId", data.plan.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not generate plan");
     } finally {
@@ -70,9 +71,17 @@ export default function GeneratePage() {
             <Link href={`/dashboard/plan/${plan.id}`} className="mt-4 inline-flex min-h-11 items-center rounded-md bg-slate-950 px-4 py-3 font-semibold text-white">
               Review plan
             </Link>
+            <p className="mt-3 text-sm text-slate-600">
+              Need to add a contact first? This plan is saved. You can find it again from the dashboard recent plans list.
+            </p>
           </div>
         ) : (
-          <p className="mt-4 text-sm leading-6 text-slate-600">Generated plans will appear here after the deterministic matcher and rationale writer finish.</p>
+          <div className="mt-4 space-y-3">
+            <p className="text-sm leading-6 text-slate-600">Generated plans will appear here after the deterministic matcher and rationale writer finish.</p>
+            <Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
+              View recent plans
+            </Link>
+          </div>
         )}
       </aside>
     </div>
