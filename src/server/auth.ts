@@ -17,13 +17,14 @@ export async function requireAdmin() {
     throw new UnauthorizedError("Authentication required");
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail) {
+  const adminEmailEnv = process.env.ADMIN_EMAIL;
+  if (!adminEmailEnv) {
     throw new ForbiddenError("Admin email is not configured");
   }
 
-  const emails = user.emailAddresses.map((email) => normalizeEmail(email.emailAddress));
-  if (!emails.includes(normalizeEmail(adminEmail))) {
+  const adminEmails = adminEmailEnv.split(",").map((e) => normalizeEmail(e.trim()));
+  const userEmails = user.emailAddresses.map((email) => normalizeEmail(email.emailAddress));
+  if (!userEmails.some((e) => adminEmails.includes(e))) {
     throw new ForbiddenError("Admin access required");
   }
 
