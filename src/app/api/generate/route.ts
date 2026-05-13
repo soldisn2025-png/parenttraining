@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     return Response.json(
-      { error: "Could not generate the plan. Please try again." },
+      { error: `Error [${category}]: ${msg}${cause ? ` — ${cause}` : ""}` },
       { status: 500 }
     );
   }
