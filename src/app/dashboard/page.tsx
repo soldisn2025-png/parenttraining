@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { listPlans, listProgressRows } from "@/server/store";
 import { StatusBadge } from "@/components/status-badge";

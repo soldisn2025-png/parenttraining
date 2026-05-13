@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listProgressRows } from "@/server/store";
 
 function relativeTime(value: string) {

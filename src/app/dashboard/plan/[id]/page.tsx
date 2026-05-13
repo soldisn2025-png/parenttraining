@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import { videos } from "@/data/catalog";
 import { listContacts, getPlan } from "@/server/store";
