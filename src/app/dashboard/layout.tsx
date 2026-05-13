@@ -1,6 +1,22 @@
-import { DashboardNav } from "@/components/dashboard-nav";
+export const dynamic = "force-dynamic";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+import { currentUser } from "@clerk/nextjs/server";
+import { DashboardNav } from "@/components/dashboard-nav";
+import { WrongAccountPage } from "@/components/wrong-account";
+import { requireAdmin, ForbiddenError, UnauthorizedError } from "@/server/auth";
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof ForbiddenError || error instanceof UnauthorizedError) {
+      const user = await currentUser();
+      const email = user?.emailAddresses[0]?.emailAddress ?? "unknown";
+      return <WrongAccountPage email={email} />;
+    }
+    throw error;
+  }
+
   return (
     <div className="min-h-screen bg-[#fbfaf7]">
       <DashboardNav />
