@@ -8,6 +8,7 @@ import { writePlanText } from "@/server/ai";
 import { errorResponse, requireAdmin } from "@/server/auth";
 import { checkRateLimit } from "@/server/rate-limit";
 import { savePlan } from "@/server/store";
+import { classifyDatabaseError, getErrorCauseMessage, getErrorMessage } from "@/server/errors";
 
 export const maxDuration = 30;
 
@@ -43,18 +44,41 @@ export async function POST(request: Request) {
     await savePlan(plan);
     return Response.json({ plan, extractedTags: tags });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    const cause =
-      error instanceof Error && error.cause instanceof Error ? error.cause.message : "";
-    const isDatabaseAuthError =
-      msg.toLowerCase().includes("password authentication failed") ||
-      cause.toLowerCase().includes("password authentication failed");
+    const category = classifyDatabaseError(error);
+    const msg = getErrorMessage(error);
+    const cause = getErrorCauseMessage(error);
 
-    if (isDatabaseAuthError) {
+    console.error("generate_plan_failed", {
+      category,
+      message: msg,
+      cause,
+    });
+
+    if (category === "database_auth") {
       return Response.json(
         {
           error:
             "Database authentication failed. Check the DATABASE_URL value in Vercel.",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (category === "database_schema") {
+      return Response.json(
+        {
+          error:
+            "Database schema is not ready. Run the Drizzle migration against the production database.",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (category === "database_permission") {
+      return Response.json(
+        {
+          error:
+            "Database permission check failed. Verify the production database role/RLS setup.",
         },
         { status: 500 }
       );
