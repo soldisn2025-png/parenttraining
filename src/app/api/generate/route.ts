@@ -43,6 +43,8 @@ export async function POST(request: Request) {
     await savePlan(plan);
     return Response.json({ plan, extractedTags: tags });
   } catch (error) {
-    return errorResponse(error);
+    const msg = error instanceof Error ? error.message : String(error);
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause.message : "";
+    return Response.json({ error: msg, cause }, { status: 500 });
   }
 }
