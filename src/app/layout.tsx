@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://walktogetheraba.com"),
   title: "Walktogether Parent Training",
   description: "Parent practice plans prepared by Kelly from Walktogether.",
+  openGraph: {
+    title: "Walktogether Parent Training",
+    description: "Parent practice plans prepared by Kelly from Walktogether.",
+    siteName: "Walktogether",
+  },
 };
 
 export default function RootLayout({

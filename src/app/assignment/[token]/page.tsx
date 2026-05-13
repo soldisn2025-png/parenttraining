@@ -4,9 +4,15 @@ import { AssignmentClient } from "./assignment-client";
 
 export default async function AssignmentPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const assignment = await getAssignmentByToken(token);
+  let assignment = null;
+  let reason = "expired";
+  try {
+    assignment = await getAssignmentByToken(token);
+    if (!assignment) reason = await getInvalidAssignmentReason(token);
+  } catch {
+    // DB unavailable — treat as expired
+  }
   if (!assignment) {
-    const reason = await getInvalidAssignmentReason(token);
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfaf7] px-4">
         <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center">
