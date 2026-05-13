@@ -43,10 +43,26 @@ export async function POST(request: Request) {
     await savePlan(plan);
     return Response.json({ plan, extractedTags: tags });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = error instanceof Error ? error.message : "Unknown error";
     const cause =
       error instanceof Error && error.cause instanceof Error ? error.cause.message : "";
-    const display = cause ? `${cause}. ${msg}` : msg;
-    return Response.json({ error: display, cause }, { status: 500 });
+    const isDatabaseAuthError =
+      msg.toLowerCase().includes("password authentication failed") ||
+      cause.toLowerCase().includes("password authentication failed");
+
+    if (isDatabaseAuthError) {
+      return Response.json(
+        {
+          error:
+            "Database authentication failed. Check the DATABASE_URL value in Vercel.",
+        },
+        { status: 500 }
+      );
+    }
+
+    return Response.json(
+      { error: "Could not generate the plan. Please try again." },
+      { status: 500 }
+    );
   }
 }
