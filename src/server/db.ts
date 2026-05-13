@@ -8,13 +8,14 @@ let client: ReturnType<typeof postgres> | null = null;
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 export function hasDatabase() {
-  return Boolean(process.env.DATABASE_URL);
+  return Boolean(getDatabaseUrl());
 }
 
 export function getDb() {
-  if (!process.env.DATABASE_URL) return null;
+  const databaseUrl = getDatabaseUrl();
+  if (!databaseUrl) return null;
   if (!client) {
-    client = postgres(process.env.DATABASE_URL, {
+    client = postgres(databaseUrl, {
       prepare: false,
       ssl: "require",
       connect_timeout: 10,
@@ -23,4 +24,9 @@ export function getDb() {
     db = drizzle(client, { schema });
   }
   return db;
+}
+
+function getDatabaseUrl() {
+  const raw = process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
+  return raw.trim().replace(/^['"]|['"]$/g, "");
 }
