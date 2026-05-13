@@ -1,4 +1,11 @@
 import { sql } from "drizzle-orm";
+import {
+  assignmentTokens,
+  auditEvents,
+  generatedPlans,
+  parentContacts,
+  videoProgress,
+} from "@/db/schema";
 import { requireAdmin } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { classifyDatabaseError, getErrorCauseMessage, getErrorMessage } from "@/server/errors";
@@ -79,22 +86,33 @@ export async function GET() {
       return Response.json({ ok: false, configured: true, checks }, { status: 500 });
     }
 
-    try {
-      await db.execute(sql`select id from generated_plans limit 1`);
-      checks.push({ name: "generated_plans_select", ok: true });
-    } catch (error) {
-      checks.push({
-        name: "generated_plans_select",
-        ok: false,
-        category: classifyDatabaseError(error),
-        message: getErrorCauseMessage(error) || getErrorMessage(error),
-      });
-      console.error("db_health_schema_failed", {
-        category: classifyDatabaseError(error),
-        message: getErrorMessage(error),
-        cause: getErrorCauseMessage(error),
-      });
-      return Response.json({ ok: false, configured: true, checks }, { status: 500 });
+    const tableChecks = [
+      { name: "generated_plans_select", table: generatedPlans },
+      { name: "parent_contacts_select", table: parentContacts },
+      { name: "assignment_tokens_select", table: assignmentTokens },
+      { name: "video_progress_select", table: videoProgress },
+      { name: "audit_events_select", table: auditEvents },
+    ];
+
+    for (const check of tableChecks) {
+      try {
+        await db.select().from(check.table).limit(1);
+        checks.push({ name: check.name, ok: true });
+      } catch (error) {
+        checks.push({
+          name: check.name,
+          ok: false,
+          category: classifyDatabaseError(error),
+          message: getErrorCauseMessage(error) || getErrorMessage(error),
+        });
+        console.error("db_health_table_failed", {
+          tableCheck: check.name,
+          category: classifyDatabaseError(error),
+          message: getErrorMessage(error),
+          cause: getErrorCauseMessage(error),
+        });
+        return Response.json({ ok: false, configured: true, checks }, { status: 500 });
+      }
     }
 
     return Response.json({ ok: true, configured: true, checks });
