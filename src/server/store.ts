@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, gt, isNull, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, ne } from "drizzle-orm";
 import { catalog } from "@/data/catalog";
 import { assignmentTokens, auditEvents, generatedPlans, parentContacts, videoProgress } from "@/db/schema";
 import { getAssignmentExpiry, normalizeEmail } from "@/lib/security";
@@ -371,21 +371,13 @@ export async function updateProgress(token: string, videoId: VideoId, patch: Par
 
 export async function listProgressRows() {
   const db = getDb();
-  const tokenRows: AssignmentTokenRecord[] = db
-    ? (await db.select().from(assignmentTokens)).map((token) => ({
-        id: token.id,
-        planId: token.planId,
-        contactId: token.contactId,
-        token: token.token,
-        expiresAt: token.expiresAt.toISOString(),
-        sentAt: token.sentAt?.toISOString() ?? new Date().toISOString(),
-        invalidatedAt: token.invalidatedAt?.toISOString() ?? null,
-      }))
-    : Array.from(tokens.values());
-  const mapped = await Promise.all(tokenRows.map(async (token) => {
-      const plan = await getPlan(token.planId);
-      const contact = await getContact(token.contactId);
-      const rows = await listProgressForToken(token.id);
+
+  if (!db) {
+    const tokenRows = Array.from(tokens.values());
+    return tokenRows.map((token) => {
+      const plan = plans.get(token.planId);
+      const contact = contacts.get(token.contactId);
+      const rows = Array.from(progress.values()).filter((item) => item.tokenId === token.id);
       if (!plan || !contact) return null;
       return {
         token,
@@ -397,8 +389,72 @@ export async function listProgressRows() {
         needHelp: rows.filter((row) => row.needHelp).length,
         lastActive: rows.map((row) => row.updatedAt).sort().slice(-1)[0] ?? token.sentAt,
       };
-    }));
-  return mapped.filter(Boolean);
+    }).filter(Boolean);
+  }
+
+  const dbTokenRows = await db.select().from(assignmentTokens);
+  if (dbTokenRows.length === 0) return [];
+
+  const planIds = [...new Set(dbTokenRows.map((t) => t.planId))];
+  const contactIds = [...new Set(dbTokenRows.map((t) => t.contactId))];
+  const tokenIds = dbTokenRows.map((t) => t.id);
+
+  const [planRows, contactRows, progressRows, auditRows] = await Promise.all([
+    db.select().from(generatedPlans).where(inArray(generatedPlans.id, planIds)),
+    db.select().from(parentContacts).where(inArray(parentContacts.id, contactIds)),
+    db.select().from(videoProgress).where(inArray(videoProgress.tokenId, tokenIds)),
+    db.select().from(auditEvents).where(inArray(auditEvents.planId, planIds)),
+  ]);
+
+  const planMap = new Map(planRows.map((p) => [p.id, p]));
+  const contactMap = new Map(contactRows.map((c) => [c.id, c]));
+  const progressByToken = new Map<string, typeof progressRows>();
+  for (const row of progressRows) {
+    const bucket = progressByToken.get(row.tokenId) ?? [];
+    bucket.push(row);
+    progressByToken.set(row.tokenId, bucket);
+  }
+  const auditsByPlan = new Map<string, typeof auditRows>();
+  for (const row of auditRows) {
+    const bucket = auditsByPlan.get(row.planId) ?? [];
+    bucket.push(row);
+    auditsByPlan.set(row.planId, bucket);
+  }
+
+  return dbTokenRows.map((token) => {
+    const planRow = planMap.get(token.planId);
+    const contactRow = contactMap.get(token.contactId);
+    if (!planRow || !contactRow) return null;
+
+    const tokenRecord: AssignmentTokenRecord = {
+      id: token.id,
+      planId: token.planId,
+      contactId: token.contactId,
+      token: token.token,
+      expiresAt: token.expiresAt.toISOString(),
+      sentAt: token.sentAt?.toISOString() ?? new Date().toISOString(),
+      invalidatedAt: token.invalidatedAt?.toISOString() ?? null,
+    };
+    const plan = planFromRow(planRow, auditsByPlan.get(token.planId) ?? []);
+    const contact = {
+      id: contactRow.id,
+      email: contactRow.email,
+      firstName: contactRow.firstName,
+      createdAt: contactRow.createdAt.toISOString(),
+    };
+    const rows = (progressByToken.get(token.id) ?? []).map(progressFromRow);
+
+    return {
+      token: tokenRecord,
+      plan,
+      contact,
+      progress: rows,
+      watched: rows.filter((row) => row.watched).length,
+      tried: rows.filter((row) => row.triedIt).length,
+      needHelp: rows.filter((row) => row.needHelp).length,
+      lastActive: rows.map((row) => row.updatedAt).sort().slice(-1)[0] ?? tokenRecord.sentAt,
+    };
+  }).filter(Boolean);
 }
 
 async function getContact(id: string) {
