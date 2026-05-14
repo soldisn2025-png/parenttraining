@@ -18,3 +18,4 @@
 - Use TDD: write or update tests before completing feature work.
 - Run `npm test`, `npm run lint`, and `npm run build` before handoff.
 - Keep final video order capped at 5 in UI and server logic.
+- For UI/UX review requests, use `docs/DESIGN_REVIEW_TEMPLATE.md` and prioritize issues that affect comprehension, trust, CTA clarity, completion effort, or accessibility.

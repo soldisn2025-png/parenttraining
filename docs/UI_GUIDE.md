@@ -10,3 +10,6 @@ Admin screens can be dense but should keep actions obvious: generate, review, re
 Parent pages must be mobile-first and readable by a 5th grader. Use short sentences, large tap targets, and one clear action at a time.
 
 Do not show module codes, scores, clinical labels, or technical errors to parents.
+
+## Design Reviews
+Use [DESIGN_REVIEW_TEMPLATE.md](./DESIGN_REVIEW_TEMPLATE.md) when reviewing screenshots, prototypes, or implemented pages. Focus on high-impact issues only: comprehension, trust, CTA clarity, completion effort, accessibility, and whether the screen matches the parent's or admin's real task.
