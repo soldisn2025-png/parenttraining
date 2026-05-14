@@ -33,7 +33,7 @@ export async function sendAssignmentEmail(input: SendAssignmentEmailInput) {
   const { data, error } = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL ?? "Kelly from Walktogether <kelly@walktogetheraba.com>",
     to: input.to,
-    replyTo: process.env.ADMIN_EMAIL,
+    replyTo: process.env.ADMIN_EMAIL?.split(",").map((e) => e.trim()).filter(Boolean),
     subject: email.subject,
     text: email.text,
     html: email.html,
