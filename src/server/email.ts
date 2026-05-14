@@ -44,7 +44,7 @@ export async function sendAssignmentEmail(input: SendAssignmentEmailInput) {
       name: error.name,
       message: error.message,
     });
-    throw new EmailSendError();
+    throw new EmailSendError(`Could not send email: ${error.name} — ${error.message}`);
   }
 
   return data;
