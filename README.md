@@ -1,5 +1,17 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Walktogether Harness
+
+Run the development harness from the repo root:
+
+```bash
+python scripts/execute.py design-review
+```
+
+Use the `design-review` phase after meaningful UI changes. It applies `docs/DESIGN_REVIEW_TEMPLATE.md` and writes actionable findings to `docs/DESIGN_REVIEW_FINDINGS.md`.
+
+The template can also be used manually: paste `docs/DESIGN_REVIEW_TEMPLATE.md` into a review request with a screenshot. If image annotation is requested, use imagegen; otherwise a text-only review is fine.
+
 ## Getting Started
 
 First, run the development server:
