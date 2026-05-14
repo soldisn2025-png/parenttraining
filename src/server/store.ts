@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, ne } from "drizzle-orm";
 import { catalog } from "@/data/catalog";
 import { assignmentTokens, auditEvents, generatedPlans, parentContacts, videoProgress } from "@/db/schema";
 import { getAssignmentExpiry, normalizeEmail } from "@/lib/security";
@@ -171,26 +171,13 @@ export async function updatePlan(id: string, updater: (plan: GeneratedPlan) => G
   return updated;
 }
 
-export async function sendAssignment(planId: string, contactId: string) {
+export async function createAssignmentToken(planId: string, contactId: string) {
   const plan = await getPlan(planId);
   const contact = contacts.get(contactId);
   const db = getDb();
   const dbContact = db ? await getContact(contactId) : contact;
   if (!plan || !dbContact) return null;
   if (plan.reviewStatus !== "approved") return null;
-
-  if (db) {
-    await db
-      .update(assignmentTokens)
-      .set({ invalidatedAt: new Date() })
-      .where(and(eq(assignmentTokens.contactId, contactId), isNull(assignmentTokens.invalidatedAt), gt(assignmentTokens.expiresAt, new Date())));
-  } else {
-    for (const token of Array.from(tokens.values())) {
-      if (token.contactId === contactId && !token.invalidatedAt && new Date(token.expiresAt) > new Date()) {
-        token.invalidatedAt = new Date().toISOString();
-      }
-    }
-  }
 
   const token = crypto.randomUUID();
   const record: AssignmentTokenRecord = {
@@ -215,6 +202,14 @@ export async function sendAssignment(planId: string, contactId: string) {
     tokens.set(token, record);
   }
 
+  return { token: record, contact: dbContact };
+}
+
+export async function markAssignmentSent(planId: string, record: AssignmentTokenRecord) {
+  const plan = await getPlan(planId);
+  if (!plan) return null;
+  await invalidatePriorAssignmentTokens(record.contactId, record.id);
+
   const event: OverrideEvent = {
     timestamp: record.sentAt,
     action: "sent",
@@ -226,13 +221,44 @@ export async function sendAssignment(planId: string, contactId: string) {
   await updatePlan(planId, (current) => ({
     ...current,
     reviewStatus: "sent",
-    parentAssignmentToken: token,
+    parentAssignmentToken: record.token,
     tokenExpiresAt: record.expiresAt,
     sentAt: record.sentAt,
     overrideLog: [...current.overrideLog, event],
   }));
 
-  return { token: record, contact: dbContact };
+  return getPlan(planId);
+}
+
+export async function sendAssignment(planId: string, contactId: string) {
+  const prepared = await createAssignmentToken(planId, contactId);
+  if (!prepared) return null;
+  await markAssignmentSent(planId, prepared.token);
+  return prepared;
+}
+
+async function invalidatePriorAssignmentTokens(contactId: string, keepTokenId: string) {
+  const db = getDb();
+  if (db) {
+    await db
+      .update(assignmentTokens)
+      .set({ invalidatedAt: new Date() })
+      .where(
+        and(
+          eq(assignmentTokens.contactId, contactId),
+          ne(assignmentTokens.id, keepTokenId),
+          isNull(assignmentTokens.invalidatedAt),
+          gt(assignmentTokens.expiresAt, new Date())
+        )
+      );
+    return;
+  }
+
+  for (const token of Array.from(tokens.values())) {
+    if (token.id !== keepTokenId && token.contactId === contactId && !token.invalidatedAt && new Date(token.expiresAt) > new Date()) {
+      token.invalidatedAt = new Date().toISOString();
+    }
+  }
 }
 
 export async function getAssignmentByToken(token: string) {
