@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 import Link from "next/link";
 import { listPlans, listProgressRows } from "@/server/store";

@@ -173,9 +173,8 @@ export async function updatePlan(id: string, updater: (plan: GeneratedPlan) => G
 
 export async function createAssignmentToken(planId: string, contactId: string) {
   const plan = await getPlan(planId);
-  const contact = contacts.get(contactId);
   const db = getDb();
-  const dbContact = db ? await getContact(contactId) : contact;
+  const dbContact = db ? await getContact(contactId) : contacts.get(contactId);
   if (!plan || !dbContact) return null;
   if (plan.reviewStatus !== "approved") return null;
 
